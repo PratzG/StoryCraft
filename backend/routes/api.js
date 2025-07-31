@@ -98,7 +98,7 @@ Be specific about how each use case relates to their stated needs.
 If no business use cases are discussed in content shared, build based on your discretion and share at least 3 business use cases
 `;
 
-    const response = await callDatabricksLLM(prompt, {
+    const response = await callPerplexityAPI(prompt, {
       temperature: 0.2,
       max_tokens: 1200
     });
@@ -130,7 +130,7 @@ router.post('/filter-content', async (req, res) => {
 
     Return only the filtered content that directly speaks about this use case, maintaining the original context and meaning.`;
 
-    const response = await callDatabricksLLM(prompt, {
+    const response = await callPerplexityAPI(prompt, {
       temperature: 0.1,
       max_tokens: 600
     });
@@ -209,7 +209,7 @@ router.post('/generate-content', async (req, res) => {
     Return ONLY the JSON object. No extra text.
     `;
 
-    const response = await callDatabricksLLM(prompt, {
+    const response = await callPerplexityAPI(prompt, {
       temperature: 0.3,
       max_tokens: 1500
     });
@@ -373,7 +373,7 @@ router.post('/generate-story', async (req, res) => {
     Make the story compelling, professional, and focused on the customer's journey and achievements with Databricks.
     Return ONLY the JSON object. No extra text`;
 
-    const response = await callDatabricksLLM(prompt, {
+    const response = await callPerplexityAPI(prompt, {
       temperature: 0.4,
       max_tokens: 600
     });
