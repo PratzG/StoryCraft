@@ -52,6 +52,5 @@ export async function callPerplexityAPI(message, apiConfig = {}) {
 
   return {
     data: data.choices[0].message.content,
-    citations: data.search_results || []
   }
 }
