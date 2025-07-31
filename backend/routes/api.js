@@ -131,7 +131,7 @@ router.post('/filter-content', async (req, res) => {
     Return only the filtered content that directly speaks about this use case, maintaining the original context and meaning.`;
 
     const response = await callPerplexityAPI(prompt, {
-      temperature: 0.1,
+      temperature: 1,
       max_tokens: 600
     });
 
