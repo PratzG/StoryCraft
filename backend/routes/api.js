@@ -95,7 +95,7 @@ Customer instruction/or content to analyze: ${customerContent.trim()}
 POINTS TO REMEMBER -
 Focus on identifying use cases that are explicitly mentioned or strongly implied in the customer's description, if available. 
 Be specific about how each use case relates to their stated needs. 
-If no business use cases are discussed in content shared, build based on your discretion and share at least 3 business use cases
+If no business use cases are discussed in content shared, build based on your discretion and share at least 3 business use cases. Respond as JSON and nothing else.
 `;
 
     const response = await callPerplexityAPI(prompt, {
