@@ -3,6 +3,7 @@ export interface AIEditResult {
   improvedContent: string;
   researchFindings: string;
   placeholdersUsed: string[];
+  details: string;
 }
 
 export interface GeneratedContent {
@@ -174,7 +175,7 @@ export async function processUseCaseContent(
     
     // Step 2: Generate structured content from filtered content
     const generatedContent = await generateUseCaseContent(useCaseName, useCaseCategory, filteredContent);
-    
+    generatedContent.impact = generatedContent.impact.replace(/\|\|/g, "\n\n");
     return generatedContent;
   } catch (error) {
     if (error instanceof Error) {
@@ -234,7 +235,8 @@ export async function aiEditContent(
       editResult = {
         improvedContent: apiResponse.trim() || currentContent,
         researchFindings: 'Unable to parse structured response from AI edit request',
-        placeholdersUsed: []
+        placeholdersUsed: [],
+        details: ''
       };
     }
 
@@ -243,10 +245,15 @@ export async function aiEditContent(
       editResult.improvedContent = currentContent;
     }
 
+    editResult.improvedContent = editResult.improvedContent.replace(/\|\|/g, "\n\n");
+
     // Ensure arrays are properly formatted
     if (!Array.isArray(editResult.placeholdersUsed)) {
       editResult.placeholdersUsed = [];
     }
+
+    //Checking explainations
+    console.log("====DETAILS:"+editResult.details);
 
     return editResult;
   } catch (error) {

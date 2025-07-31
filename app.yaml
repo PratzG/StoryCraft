@@ -1,0 +1,7 @@
+env:
+  - name: "NODE_ENV"
+    value: "production"
+  - name: "VITE_PERPLEXITY_API_KEY"
+    value: "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"
+  - name: "VITE_PERPLEXITY_API_URL"
+    value: "https://api.perplexity.ai/chat/completions"

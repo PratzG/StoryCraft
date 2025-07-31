@@ -211,7 +211,7 @@ const ContentSection: React.FC<ContentSectionProps> = React.memo(
               ) : (
                 <Sparkles className="w-4 h-4" />
               )}
-              <span>AI Edit</span>
+              <span>AI Powered POV</span>
             </button>
           </div>
         )}

@@ -106,12 +106,15 @@ const CustomerValidation: React.FC<CustomerValidationProps> = ({
                 </div>
 
                 <div className="flex items-center space-x-3">
+                  {result.confidence !== 'low' && (
                   <button
                     onClick={onConfirm}
                     className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
                   >
                     Confirm & Continue
                   </button>
+                  )}
+
                   <button
                     onClick={onEdit}
                     className="flex items-center space-x-2 text-green-700 hover:text-green-800 font-medium py-2 px-4 rounded-xl border border-green-300 hover:border-green-400 transition-all duration-200"

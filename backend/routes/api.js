@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import { callPerplexityAPI } from '../services/perplexity.js';
 import { exportToGoogleScript, formatStoryDataForExport } from '../services/googleScriptExport.js';
 import { config } from '../config/index.js';
+import { callDatabricksLLM } from '../services/databricks.js';
 
 const router = express.Router();
 
@@ -15,31 +16,36 @@ router.post('/validate-customer', async (req, res) => {
       return res.status(400).json({ error: 'Customer details are required' });
     }
 
-    const prompt = `You are a business research assistant. I will provide you with customer details, and you need to search for and validate information about this company.
+    const prompt = `
 
-Please search for the company and provide the following information in a structured JSON format (if confidence is high):
+You are a business research assistant. I will provide you with customer details, and you need to search for and validate information about this company.
+
+- Pick the company you found closest to the entered information. Make sure to fix typos in name.
+- If you find multiple possible companies, pick one with highest confience. High or medium
+- If no one is a clear choice (higher confidence than others), then set all fields to "NA" and confidence to "low".
+- Output only that in JSON format
+- Do not provide multiple JSON results or extra narrative text outside of the JSON object.
+
+Please search for the company and provide the following information in a structured JSON format:
 
 {
-  "companyName": "Popular company name",
-  "region": "Primary geographic region/country where they operate",
-  "industry": "Primary industry/sector: Ideally pick the main industry names",
+  "companyName": "Company (exact match) or NA if confidence is low",
+  "region": "Primary geographic region/country where they operate or NA if confidence is low",
+  "industry": "Primary industry/sector: Ideally pick the main industry names or NA if confidence is low",
   "confidence": "high/medium/low - your confidence in the accuracy of this information",
-  "additionalInfo": "Any relevant additional context about the company in 30 wrods or less",
+  "additionalInfo": "Any relevant additional context about the company summarized in 30 words or less",
   "suggestions": "If the company name seems unclear, suggest the most likely correct company name. Leave empty if clear"
 }
 
 Customer details provided: ${customerDetails.trim()}
+`;
 
-If you cannot find reliable information about this company, set confidence to "low" and explain what additional details would help identify the company more accurately.
-If confidence is low, also set company name, region, additional info and industry to "NA".
-Focus on finding the most current and accurate information available.`;
-
-    const response = await callPerplexityAPI(prompt, {
+    const {data, citations} = await callPerplexityAPI(prompt, {
       temperature: 0.1,
       max_tokens: 800
     });
 
-    res.json({ response });
+    res.json({response: data});
   } catch (error) {
     console.error('Customer validation error:', error);
     res.status(500).json({ error: error.message });
@@ -80,8 +86,8 @@ Here are examples of Databricks use cases to look for:
 - AI Factory: Churning out AI use cases in quick succession
 - <Workload> Migration or Migration from <Incumbent Technology>
 
-**Business Use Cases should include:**
-- Main business use cases applicable to ${industry} industry
+**Business Use Cases samples:**
+- Main Data Specific business use cases applicable to ${industry} industry
 
 
 Customer instruction/or content to analyze: ${customerContent.trim()}
@@ -89,11 +95,10 @@ Customer instruction/or content to analyze: ${customerContent.trim()}
 POINTS TO REMEMBER -
 Focus on identifying use cases that are explicitly mentioned or strongly implied in the customer's description, if available. 
 Be specific about how each use case relates to their stated needs. 
-If any single use case has both business or platform angle, prioritize business use case name. 
-If no use case is discussed in content shared, build based on your discretion and share at least 3 business use cases and 2 platform use cases
+If no business use cases are discussed in content shared, build based on your discretion and share at least 3 business use cases
 `;
 
-    const response = await callPerplexityAPI(prompt, {
+    const response = await callDatabricksLLM(prompt, {
       temperature: 0.2,
       max_tokens: 1200
     });
@@ -114,16 +119,18 @@ router.post('/filter-content', async (req, res) => {
       return res.status(400).json({ error: 'Use case name and customer notes are required' });
     }
 
-    const prompt = `You are a content analysis expert. I will provide you with customer notes and a specific use case name. Your task is to extract only the content that directly relates to or references the given use case.
+    const prompt = `You are a content analysis expert. I will provide you with customer notes and a specific use case name. 
+    Your task is to extract only the content that directly relates to or references the given use case.
 
-Please analyze the content and return only the portions that are directly relevant to the specified use case. If no relevant content is found, return "No specific content found for this use case."
+    Please analyze the content and return only the portions that are directly relevant to the specified use case. 
+    If no relevant content is found, return "Insufficient data shared."
 
-Use Case: ${useCaseName.trim()}
-Customer Notes: ${customerNotes.trim()}
+    Use Case: ${useCaseName.trim()}
+    Customer Notes: ${customerNotes.trim()}
 
-Return only the filtered content that directly speaks about this use case, maintaining the original context and meaning.`;
+    Return only the filtered content that directly speaks about this use case, maintaining the original context and meaning.`;
 
-    const response = await callPerplexityAPI(prompt, {
+    const response = await callDatabricksLLM(prompt, {
       temperature: 0.1,
       max_tokens: 600
     });
@@ -145,46 +152,64 @@ router.post('/generate-content', async (req, res) => {
       return res.status(400).json({ error: 'Use case name, category, and filtered content are required' });
     }
 
-    const prompt = `You are a Databricks solutions expert creating customer success stories. Analyze the provided customer content and generate three key story elements with confidence scores based on how well the content supports each section.
+    const useCaseTypeSpecificInstruction = {
+      "Business Use Case": `
+      - Problem: Business challenges, operational inefficiencies, market pressures
+      - Solution: Data-driven business capabilities, AI/ML applications, decision-making improvements in context of problem and problem suggestions
+      - Impact: 
+        Business metrics - revenue growth, cost savings, operational efficiency, competitive advantage.
+        Impact statements must include actual measurable values (percentages, savings, speed, performance metrics)
+        If NO numeric values are present in customer content, impactConfidence MUST be 0.3 (do not exceed 0.3)
+      `,
+      "Platform Use Case": `
+      - Problem: Technical challenges, infrastructure limitations, scalability issues
+      - Solution: Databricks platform capabilities, technical architecture, modernization approach in context of problem and problem suggestions
+      - Impact: 
+        Technical metrics - performance gains, cost reduction, team productivity improvements. 
+        Impact statements must include actual numeric metrics (e.g., 25% faster queries, $1M savings)
+        If NO numeric values are found in customer content, impactConfidence MUST be 0.3 (do not exceed 0.3).
+        `
+    }
 
-**Content Requirements by Use Case Type:**
+    const prompt = `
+    You are a Databricks solutions expert creating customer success stories. 
+    Analyze the provided customer content and generate three key story elements.
 
-**For Platform Use Cases:**
-- Problem: Technical challenges, infrastructure limitations, scalability issues
-- Solution: Databricks platform capabilities, technical architecture, modernization approach
-- Impact: Technical metrics - performance gains, cost reduction, team productivity improvements. All Impact statements should be measurable with numbers.
+    **Content Requirements:**
+    ${useCaseTypeSpecificInstruction[useCaseCategory.trim()]}
 
-**For Business Use Cases:**
-- Problem: Business challenges, operational inefficiencies, market pressures
-- Solution: Data-driven business capabilities, AI/ML applications, decision-making improvements  
-- Impact: Business metrics - revenue growth, cost savings, operational efficiency, competitive advantage. Impact statements should be measurable with numbers.
+    **Critical Instructions:**
+    1. Use past tense (the customer "faced", "implemented", "achieved").
+    2. Confidence scores (0.0-1.0) reflect how well the provided content supports each section.
+    3. In suggestions, provide specific suggestions for missing information in context of Databricks and the customer.
+    4. **For the Impact section:**
+      - If the content lacks numeric values, set "impactConfidence" to 0.3
+      - Only include impact statements that directly come from customer content
+    5. Only provide information present in the Customer Content Section.
 
-**Critical Instructions:**
-1. Use past tense (the customer "faced", "implemented", "achieved")
-2. Confidence scores (0.0-1.0) reflect how well the provided content supports each section
-3. If confidence < 0.7, provide specific suggestions for missing information
-4. If Impact section does not have numbers, Impact section's confidence is always below 0.5
+    **Required JSON Response:**
 
-**Required JSON Response:**
+    {
+      "problemStatement": "Past tense description of the specific challenge the customer faced in a 30-35 word statement",
+      "databricksSolution": "Past tense description of how customer solved the problem with Databricks capabilities, specifically addressing the pain points, in a 30-35 word statement", 
+      "impact": "2 separate impact statements, each 10 words maximum, separated by || (double pipe). First impact statement || Second impact statement",
+      "problemConfidence": 0.0-1.0,
+      "solutionConfidence": 0.0-1.0,
+      "impactConfidence": 0.0-1.0,
+      "problemSuggestions": ["specific data needed"],
+      "solutionSuggestions": ["specific data needed"],
+      "impactSuggestions": ["specific data needed"]
+    }
 
-{
-  "problemStatement": "Past tense description of the specific challenge the customer faced in a 35-40 word statement",
-  "databricksSolution": "Past tense description of how Databricks solved the problem in a 35-40 word statement", 
-  "impact": "First 20-word impact statement||Second 20-word impact statement",
-  "problemConfidence": 0.0-1.0,
-  "solutionConfidence": 0.0-1.0,
-  "impactConfidence": 0.0-1.0,
-  "problemSuggestions": ["specific data needed if confidence < 0.7"],
-  "solutionSuggestions": ["specific data needed if confidence < 0.7"],
-  "impactSuggestions": ["specific data needed if confidence < 0.7"]
-}
+    **Analysis Context:**
+    - Use Case: ${useCaseName.trim()}
+    - Category: ${useCaseCategory.trim()}
+    - Customer Content (Shared by me, the account executive): ${filteredContent.trim()}
 
-**Analysis Context:**
-- Use Case: ${useCaseName.trim()}
-- Category: ${useCaseCategory.trim()}
-- Customer Content: ${filteredContent.trim()}`;
+    Return ONLY the JSON object. No extra text.
+    `;
 
-    const response = await callPerplexityAPI(prompt, {
+    const response = await callDatabricksLLM(prompt, {
       temperature: 0.3,
       max_tokens: 1500
     });
@@ -208,73 +233,95 @@ router.post('/ai-edit-content', async (req, res) => {
 
     const sectionInstructions = {
       problem: `
-                Create a compelling 35-40 word statement in past tense describing the specific challenge the customer faced.
+        You are a Databricks solutions expert tasked with improving customer success story content. 
+        You will receive existing content and specific feedback about what's missing or needs improvement.
+        Your task is to enhance the content by conducting online or local research to find relevant information that addresses the feedback. 
+        Create a compelling 30-35 word statement in past tense describing the specific challenge the customer faced.
 
-                **Required JSON Response:**
-                {
-                  "improvedContent": "Enhanced content that addresses the feedback points in a compelling 35-40 word statement in past tense describing how Databricks solved the problem.",
-                  "researchFindings": "Research sources sperated by a |. Example: A | B | C etc.",
-                  "placeholdersUsed": ["List of any placeholders used and what they represent"]
-                }
+        **STRICT REQUIREMENTS:**
+        - The "improvedContent" must be between 30 and 35 words (inclusive).
+        - Count the words and ensure the statement is within range. If not, adjust until it fits.
+
+        **Required JSON Response:
+        {
+          "improvedContent": "Enhanced content (30-35 words) in past tense.",
+          "placeholdersUsed": ["List of placeholders used and what they represent"]
+        }
       `,
       solution: `
-                Create a compelling 35-40 word statement in past tense describing how Databricks solved the problem.
+        You are a Databricks solutions expert tasked with improving customer success story content. 
+        You will receive existing content and specific feedback about what's missing or needs improvement.
+        Your task is to enhance the content by conducting online or local research to find relevant information that addresses the feedback. 
 
-                **Required JSON Response:**
-                {
-                  "improvedContent": "Enhanced content that addresses the feedback points in a compelling 35-40 word statement in past tense describing how Databricks solved the problem.",
-                  "researchFindings": "Research sources sperated by a |. Example: A | B | C etc.",
-                  "placeholdersUsed": ["List of any placeholders used and what they represent"]
-                }
+        Create a compelling 30-35 word statement in past tense describing how Databricks solved the problem.
+
+        **STRICT REQUIREMENTS:**
+        - The "improvedContent" must be between 30 and 35 words (inclusive).
+        - Count the words and ensure the statement is within range. If not, adjust until it fits.
+
+        **Required JSON Response:
+        {
+          "improvedContent": "Enhanced content (30-35 words) in past tense describing how Databricks solved the problem.",
+          "placeholdersUsed": ["List of placeholders used and what they represent"]
+        }
       `,
-      impact: `                
-                **Required JSON Response:**
-                {
-                  "improvedContent": "Enhanced content that addresses the feedback points as 2 separate impact statements, each 20 words maximum, separated by || (double pipe). Each statement should describe one measurable outcomes and one kpi in past tense.",
-                  "researchFindings": "Research sources sperated by a |. Example: A | B | C etc.",
-                  "placeholdersUsed": ["List of any placeholders used and what they represent"]
-                }
+      impact: `
+        You are an expert business analyst tasked with improving content by incorporating quantifiable, benchmark-backed outcomes.
 
-                Internal Benchmarks - 
-                1. Data team (DE DA and DS) productivity gain 35%. Source: Databricks internal benchmarks and TEI report.
-                2. Estimated Time to market improvement 30%. Source: Databricks internal benchmarks.
-                3. Estimate Faster time to insight imrovement 30%. Source: Databricks internal benchmarks
+        **Step-by-Step Process:**
+        1. Analyze currentContent and identify gaps based on AI feedback. Elevate conversation to business metrics.
+        2. Define measurable variables depending on use case category
+          - Platform Use Case - Cost, Productivity, Performance etc.
+          - Business Use Case - Use case specific business KPI
+        3. Use internal benchmarks or search or infer from external research (cite credible sources).
+        4. Combine currentContent with quantified outcomes into improvedContent (two statements, max 10 words each).
+        5. Provide reasoning in details (max 70 words).
 
-                Use placeholders when specific data isn't available:
-                - Performance improvements: "XX% faster processing"
-                - Cost savings: "$XX,XXX cost reduction" 
-                - Time savings: "XX hours saved per week"
-                - Revenue impact: "$XX million revenue increase"
-                - Efficiency gains: "XX% improvement in efficiency"
+        **Internal Benchmarks For Reference:
+        1. Data engineer, analyst and scientist productivity gain 35%. Source: Databricks benchmarks and TEI report.
+        2. ML use cases reach market faster by 30%. Source: Databricks benchmarks.
+        3. Insight available to the end user 30% faster. Source: Databricks benchmarks.
+
+        **Required JSON Response:**
+        {
+          "improvedContent": "Statement 1 (10 words max) || Statement 2 (10 words max)",
+          "researchFindings": "Credible citations used (max 10 words each) separated by |",
+          "placeholdersUsed": ["List of placeholders and their meaning"],
+          "details": "Explain reasoning and logic, referencing benchmarks, max 60-70 words."
+        }
       `
     };
 
-    const prompt = `You are a Databricks solutions expert tasked with improving customer success story content based on AI feedback. You will receive existing content and specific feedback about what's missing or needs improvement.
-Your task is to enhance the content by conducting online research to find relevant information that addresses the feedback. If specific data cannot be found through research, use XX style placeholders.
 
-${sectionInstructions[section]}
+    const prompt = `Main Instructions:
+    ${sectionInstructions[section]}
 
-**Instructions:**
-1. Analyze the existing content and feedback
-2. Research relevant information to address the feedback points
-3. Follow the exact formatting requirements above
-4. Use past tense throughout
+    **Instructions:
+    1. Analyze the existing content and feedback.
+    2. Preserve all factual elements of the original content unless they are incorrect or irrelevant.
+    3. Enhance and expand the original content by logically incorporating the feedback points, ensuring the improved version remains directly correlated to the original.
+    4. If data is missing, fill gaps using research or XX-style placeholders.
+    5. Follow the exact formatting requirements specified in the section instructions.
+    6. Use past tense throughout.
 
-**Context:**
-- Section: ${section}
-- Current Content: ${currentContent.trim()}
-- AI Feedback: ${feedback.join('; ')}
-- Use Case: ${useCaseName.trim()}
-- Category: ${useCaseCategory.trim()}
+    **Context:**
+    - Section: ${section}
+    - Current Content: ${currentContent.trim()}
+    - AI Feedback: ${feedback.join('; ')}
+    - Use Case: ${useCaseName.trim()}
+    - Category: ${useCaseCategory.trim()}
 
-Focus on making the content more compelling and specific while maintaining accuracy. Address each feedback point systematically.`;
+    Focus on making the content more compelling and specific while maintaining accuracy. Address each feedback point.
+    Make sure that there is clear and logical reference to current content in the improved content.
+    Return ONLY the JSON object. No extra text.`;
 
-    const response = await callPerplexityAPI(prompt, {
+    const {data, citations} = await callPerplexityAPI(prompt, {
       temperature: 0.4,
-      max_tokens: 600
+      max_tokens: 1000
     });
 
-    res.json({ response });
+    res.json({response: data});
+
   } catch (error) {
     console.error('AI edit content error:', error);
     res.status(500).json({ error: error.message });
@@ -293,38 +340,40 @@ router.post('/generate-story', async (req, res) => {
 
     const prompt = `You are a Databricks marketing expert creating compelling customer success stories. Based on the provided use case data, generate both a concise summary and a detailed story.
 
-**Customer Context:**
-- Company: ${useCaseData.customerInfo?.companyName || 'Customer'}
-- Industry: ${useCaseData.customerInfo?.industry || 'Technology'}
-- Region: ${useCaseData.customerInfo?.region || 'Global'}
+    **Customer Context:
+    - Company: ${useCaseData.customerInfo?.companyName || 'Customer'}
+    - Industry: ${useCaseData.customerInfo?.industry || 'Technology'}
+    - Region: ${useCaseData.customerInfo?.region || 'Global'}
 
-**Use Case Details:**
-- Use Case: ${useCaseData.useCaseName}
-- Category: ${useCaseData.useCaseCategory}
-- Problem: ${useCaseData.problemStatement}
-- Solution: ${useCaseData.databricksSolution}
-- Impact: ${useCaseData.impact}
+    **Use Case Details:
+    - Use Case: ${useCaseData.useCaseName}
+    - Category: ${useCaseData.useCaseCategory}
+    - Problem: ${useCaseData.problemStatement}
+    - Solution: ${useCaseData.databricksSolution}
+    - Impact: ${useCaseData.impact}
 
-**Requirements:**
-1. **Summary**: Create a compelling 20-22 word summary that captures the essence of the success story
-2. **Detailed Story**: Write a 200-250 word narrative that tells the complete customer success story
+    **Requirements:
+    1. **Summary**: Create a compelling 18-20 word summary that captures the essence of the success story
+    2. **Detailed Story**: Write a 180-200 word narrative that tells the complete customer success story
+    3. Seperate story into two segments with a new line, but do not add double new lines in story anywhere.
 
-**Story Structure for Detailed Story:**
-- Start with customer context and challenge
-- Describe the Databricks solution implementation
-- Highlight the measurable impact and benefits
-- Use engaging, professional tone suitable for customer-facing materials
-- Focus on business value and outcomes
+    **Story Structure for Detailed Story:
+    - Start with customer context and challenge
+    - Describe the Databricks solution implementation
+    - Highlight the measurable impact and benefits
+    - Use engaging, professional tone suitable for customer-facing materials
+    - Focus on business value and outcomes
 
-**Required JSON Response:**
-{
-  "summary": "20-25 word compelling summary of the customer success story",
-  "detailedStory": "200-250 word detailed narrative of the complete customer success story"
-}
+    Required JSON Response:
+    {
+      "summary": "18-20 word compelling summary of the customer success story",
+      "detailedStory": "180-200 word detailed narrative of the complete customer success story"
+    }
 
-Make the story compelling, professional, and focused on the customer's journey and achievements with Databricks.`;
+    Make the story compelling, professional, and focused on the customer's journey and achievements with Databricks.
+    Return ONLY the JSON object. No extra text`;
 
-    const response = await callPerplexityAPI(prompt, {
+    const response = await callDatabricksLLM(prompt, {
       temperature: 0.4,
       max_tokens: 600
     });

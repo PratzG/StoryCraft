@@ -1,0 +1,16 @@
+Change in Bolt
+Download to local file
+Install Server.js and express
+change lucid-react to 0.263.1
+Move dev dependencies to serving
+
+npm install for package lock
+
+Then delete the node_modules
+Yaml file should contain environment variables and commands if necessary
+
+Ensure you are authenticated on Databricks using CLI or Token
+Sync back using databricks command line to root folder of apps - 
+databricks sync --watch . /Workspace/Users/pratyush.gosain@databricks.com/story-craft-va
+
+Build and run

@@ -50,5 +50,8 @@ export async function callPerplexityAPI(message, apiConfig = {}) {
     throw new Error('No response received from Perplexity API');
   }
 
-  return data.choices[0].message.content;
+  return {
+    data: data.choices[0].message.content,
+    citations: data.search_results || []
+  }
 }

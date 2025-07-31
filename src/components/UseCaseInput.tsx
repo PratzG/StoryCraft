@@ -33,7 +33,7 @@ const UseCaseInput: React.FC<UseCaseInputProps> = ({
       <label className="flex items-center space-x-3 text-lg font-medium text-gray-900">
         <MessageSquare className="w-5 h-5 text-gray-600" />
         <span>
-          Tell us more about the use cases?
+          Tell us about the use cases already deployed?
         </span>
         {isAnalyzing && (
           <div className="flex items-center space-x-2">
@@ -49,7 +49,7 @@ const UseCaseInput: React.FC<UseCaseInputProps> = ({
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="How does your customer use Databricks? You can paste your discovery notes here or ask for an outside in POV. "
+          placeholder="How does your customer use Databricks? Share your thoughts on work we have delivered or paste your discovery notes here."
           rows={6}
           readOnly={!isEditable}
           className={`flex-1 px-4 py-4 text-lg border rounded-2xl outline-none transition-all duration-200 placeholder-gray-400 resize-none ${

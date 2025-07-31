@@ -1,3 +1,5 @@
+import { extractJsonFromResponse } from '../utils/repairJSON';
+
 export interface StoryContent {
   summary: string; // 20-25 words
   detailedStory: string; // 200-250 words
@@ -25,7 +27,8 @@ export interface StoryGenerationResult {
  * Generates story content (summary and detailed story) for a single use case
  */
 export async function generateStoryContent(
-  useCaseData: UseCaseStoryData
+  useCaseData: UseCaseStoryData,
+  attempt: number = 1
 ): Promise<StoryContent> {
   if (!useCaseData.useCaseName || !useCaseData.problemStatement || !useCaseData.databricksSolution || !useCaseData.impact) {
     console.log('Story generation input:', useCaseData.useCaseName, useCaseData.databricksSolution, useCaseData.problemStatement, useCaseData.impact);
@@ -38,9 +41,7 @@ export async function generateStoryContent(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        useCaseData
-      })
+      body: JSON.stringify({ useCaseData }),
     });
 
     if (!response.ok) {
@@ -53,17 +54,13 @@ export async function generateStoryContent(
 
     // Try to parse JSON response
     let storyContent: StoryContent;
-    
     try {
-      // Extract JSON from response if it's wrapped in text
-      const jsonMatch = apiResponse.match(/\{[\s\S]*\}/);
-      const jsonString = jsonMatch ? jsonMatch[0] : apiResponse;
-      storyContent = JSON.parse(jsonString);
-    } catch (parseError) {
-      // If JSON parsing fails, create a fallback response
+      storyContent = extractJsonFromResponse(apiResponse);
+    } catch {
+      console.log("STORY FAILURE: Raw API Response:", apiResponse);
       storyContent = {
         summary: 'Unable to generate story summary from provided content.',
-        detailedStory: 'Unable to generate detailed story from provided content. Please check the use case data and try again.'
+        detailedStory: 'Unable to generate detailed story from provided content. Please check the use case data and try again.',
       };
     }
 
@@ -74,8 +71,14 @@ export async function generateStoryContent(
 
     return storyContent;
   } catch (error) {
+    console.warn(`Story generation attempt ${attempt} failed:`, error);
+    if (attempt < 2) {
+      console.log(`Retrying story generation for ${useCaseData.useCaseName}...`);
+      return generateStoryContent(useCaseData, attempt + 1);
+    }
+
     if (error instanceof Error) {
-      throw new Error(`Story generation failed: ${error.message}`);
+      throw new Error(`Story generation failed after 2 attempts: ${error.message}`);
     }
     throw new Error('Story generation failed: Unknown error occurred');
   }

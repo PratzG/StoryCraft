@@ -91,7 +91,7 @@ function App() {
       console.log('Setting exportState.result:', exportResult);
     } catch (err) {
       console.error('Export failed:', err);
-      window.alert(`Export failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      //window.alert(`Export failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setExportState((prev) => ({ ...prev, isExporting: false }));
     }

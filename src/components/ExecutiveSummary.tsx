@@ -17,7 +17,7 @@ interface ExecutiveSummaryProps {
   onExport: () => void;
   isExporting: boolean;
   exportResult?: ExportResult | null;
-  onReset: () => void; // New prop for resetting the app
+  onReset: () => void;
 }
 
 const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
@@ -55,7 +55,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
                   rel="noopener noreferrer"
                   className="text-blue-600 underline ml-1"
                 >
-                  Click here to download
+                  Click here
                 </a>
                 .
               </p>
@@ -70,26 +70,24 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
             )}
           </div>
 
-          {/* Export Button */}
-          {!hasUrl && (
-            <button
-              onClick={onExport}
-              className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-4 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none disabled:hover:bg-gray-400"
-              disabled={!isExportEnabled || isExporting}
-            >
-              {isExporting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Generating Stories...</span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-5 h-5" />
-                  <span>Export for Customer</span>
-                </>
-              )}
-            </button>
-          )}
+          {/* Export Button (Generate or Generate Again) */}
+          <button
+            onClick={onExport}
+            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-4 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none disabled:hover:bg-gray-400"
+            disabled={!isExportEnabled || isExporting}
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Generating Stories...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-5 h-5" />
+                <span>{hasUrl ? 'Generate Again' : 'Export for Customer'}</span>
+              </>
+            )}
+          </button>
 
           {/* Reset Button */}
           {hasUrl && (

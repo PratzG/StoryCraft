@@ -5,7 +5,7 @@ import fetch from 'node-fetch';
  * @param {Array} storyData - Array of story objects matching the required schema
  */
 export async function exportToGoogleScript(storyData) {
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1UdhWiITGucXc5H8Ut1uRxWfu5cXq3PtB6QBQLtD6jvvy3o2YSfRlPNIwcIK8DgMY/exec';
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxR6QSMJwp7Rd-9i0LLXj2pO2hTPbq8pLQscOKQHfU9Eqx9xyWfPeyTN70XEiEkYe5/exec';
   
   // Validate input
   if (!storyData || !Array.isArray(storyData) || storyData.length === 0) {
@@ -76,7 +76,7 @@ export function formatStoryDataForExport(storyGenerationResults, customerInfo, u
     const useCaseName = useCaseKey.split('-').slice(0, -1).join('-') || 'Unknown Use Case';
     
     // Split impact into two statements
-    const impactStatements = (useCaseContent.impact || '').split('||').map(s => s.trim()).filter(s => s.length > 0);
+    const impactStatements = (useCaseContent.impact || '').split('\n\n').map(s => s.trim()).filter(s => s.length > 0);
     const is1 = impactStatements[0] || '';
     const is2 = impactStatements[1] || '';
     
@@ -88,25 +88,25 @@ export function formatStoryDataForExport(storyGenerationResults, customerInfo, u
     ].filter(suggestion => suggestion && suggestion.trim().length > 0);
     
     const notes = allSuggestions.length > 0 
-      ? `AI Recommendations: ${allSuggestions.join('; ')}`
-      : 'No specific AI recommendations provided.';
+      ? `${allSuggestions.join('\n')}`
+      : 'No customer followup recommended.';
     
     // Consolidate research findings from AI edits
     const sources = Array.isArray(researchFindings) && researchFindings.length > 0
-      ? researchFindings.join('; ')
+      ? researchFindings.join('')
       : 'No additional research sources used.';
 
     return {
       customerName: customerInfo?.companyName || 'Unknown Customer',
-      description: useCaseName,
+      description: useCaseName || '',
       databricksRole: storyResult.storyContent?.summary || '',
       challenge: useCaseContent.problemStatement || '',
       solution: useCaseContent.databricksSolution || '',
-      is1: is1,
-      is2: is2,
-      notes: notes,
+      is1: is1 || '',
+      is2: is2 || '',
+      notes: notes || '',
       story: storyResult.storyContent?.detailedStory || '',
-      sources: sources
+      sources: sources || ''
     };
   });
 }
