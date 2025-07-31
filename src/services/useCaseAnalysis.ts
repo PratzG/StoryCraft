@@ -43,7 +43,7 @@ export async function analyzeUseCases(customerContent: string, industry: string)
     }
 
     const data = await response.json();
-    const apiResponse = data.response.data;
+    const apiResponse = data.response;
 
     // Try to parse JSON response
     let analysisResult: UseCaseAnalysisResult;
