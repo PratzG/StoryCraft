@@ -135,7 +135,7 @@ router.post('/filter-content', async (req, res) => {
       max_tokens: 600
     });
 
-    res.json({ response });
+    res.json({ response:response.data });
   } catch (error) {
     console.error('Content filtering error:', error);
     res.status(500).json({ error: error.message });
