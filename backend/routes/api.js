@@ -214,7 +214,7 @@ router.post('/generate-content', async (req, res) => {
       max_tokens: 1500
     });
 
-    res.json({ response:response.data });
+    res.json({ response: response.data });
   } catch (error) {
     console.error('Content generation error:', error);
     res.status(500).json({ error: error.message });
