@@ -103,7 +103,7 @@ If no business use cases are discussed in content shared, build based on your di
       max_tokens: 1200
     });
 
-    res.json({response:data}) ;
+    res.json({response:response.data}) ;
   } catch (error) {
     console.error('Use case analysis error:', error);
     res.status(500).json({ error: error.message });
