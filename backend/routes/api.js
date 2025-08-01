@@ -40,7 +40,7 @@ Please search for the company and provide the following information in a structu
 Customer details provided: ${customerDetails.trim()}
 `;
 
-    const {data} = await callPerplexityAPI(prompt, {
+    const data = await callPerplexityAPI(prompt, {
       temperature: 0.1,
       max_tokens: 800
     });
