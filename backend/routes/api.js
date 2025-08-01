@@ -40,12 +40,12 @@ Please search for the company and provide the following information in a structu
 Customer details provided: ${customerDetails.trim()}
 `;
 
-    const response = await callPerplexityAPI(prompt, {
+    const data = await callPerplexityAPI(prompt, {
       temperature: 0.1,
       max_tokens: 800
     });
 
-    res.json({response});
+    res.json({response: data});
   } catch (error) {
     console.error('Customer validation error:', error);
     res.status(500).json({ error: error.message });
@@ -95,7 +95,7 @@ Customer instruction/or content to analyze: ${customerContent.trim()}
 POINTS TO REMEMBER -
 Focus on identifying use cases that are explicitly mentioned or strongly implied in the customer's description, if available. 
 Be specific about how each use case relates to their stated needs. 
-If no business use cases are discussed in content shared, build based on your discretion and share at least 3 business use cases. Respond as JSON and nothing else.
+If no business use cases are discussed in content shared, build based on your discretion and share at least 3 business use cases
 `;
 
     const response = await callPerplexityAPI(prompt, {
@@ -103,7 +103,7 @@ If no business use cases are discussed in content shared, build based on your di
       max_tokens: 1200
     });
 
-    res.json({response}) ;
+    res.json({ response });
   } catch (error) {
     console.error('Use case analysis error:', error);
     res.status(500).json({ error: error.message });
@@ -135,7 +135,7 @@ router.post('/filter-content', async (req, res) => {
       max_tokens: 600
     });
 
-    res.json({response});
+    res.json({ response });
   } catch (error) {
     console.error('Content filtering error:', error);
     res.status(500).json({ error: error.message });
@@ -163,8 +163,8 @@ router.post('/generate-content', async (req, res) => {
       `,
       "Platform Use Case": `
       - Problem: Technical challenges, infrastructure limitations, scalability issues
-      - Solution: Databricks platform capabilities, technical architecture, modernization approach in context of problem and problem suggestions
-      - Impact: 
+      - Solution: Databricks platform capabilities, technical architecture, modernization approach in context of problem and problem suggestions`,
+      "Impact": `
         Technical metrics - performance gains, cost reduction, team productivity improvements. 
         Impact statements must include actual numeric metrics (e.g., 25% faster queries, $1M savings)
         If NO numeric values are found in customer content, impactConfidence MUST be 0.3 (do not exceed 0.3).
@@ -211,7 +211,7 @@ router.post('/generate-content', async (req, res) => {
 
     const response = await callPerplexityAPI(prompt, {
       temperature: 0.3,
-      max_tokens: 1500
+      max_tokens: 1600
     });
 
     res.json({ response });
@@ -373,12 +373,12 @@ router.post('/generate-story', async (req, res) => {
     Make the story compelling, professional, and focused on the customer's journey and achievements with Databricks.
     Return ONLY the JSON object. No extra text`;
 
-    const response = await callPerplexityAPI(prompt, {
+    const response = await callDatabricksLLM(prompt, {
       temperature: 0.4,
       max_tokens: 600
     });
 
-    res.json(response);
+    res.json({ response });
   } catch (error) {
     console.error('Story generation error:', error);
     res.status(500).json({ error: error.message });
