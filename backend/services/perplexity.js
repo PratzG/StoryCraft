@@ -51,5 +51,5 @@ export async function callPerplexityAPI(message, apiConfig = {}) {
   }
 
   return 
-    data: data.choices[0].message.content
+    data: data.choices[0].message.content;
 }
