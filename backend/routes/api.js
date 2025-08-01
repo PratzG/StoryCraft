@@ -131,6 +131,7 @@ Return only the filtered content that directly speaks about this use case, maint
       max_tokens: 600
     });
 
+    console.log("Filtered Content: ",JSON.stringify(response))
     res.json({ response });
   } catch (error) {
     console.error('Content filtering error:', error);
