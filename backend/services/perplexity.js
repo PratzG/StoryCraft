@@ -12,7 +12,7 @@ export async function callPerplexityAPI(message, apiConfig = {}) {
   const {
     model = 'sonar',
     temperature = 0.2,
-    max_tokens = 1000
+    max_tokens = 1500
   } = apiConfig;
 
   const response = await fetch(config.PERPLEXITY_API_URL, {
@@ -50,6 +50,9 @@ export async function callPerplexityAPI(message, apiConfig = {}) {
     throw new Error('No response received from Perplexity API');
   }
 
-  return 
-    data: data.choices[0].message.content;
+  // return {
+  //   data: data.choices[0].message.content,
+  //   citations: data.search_results || []
+  // }
+  return data.choices[0].message.content;
 }
