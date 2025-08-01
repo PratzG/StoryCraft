@@ -175,39 +175,33 @@ router.post('/generate-content', async (req, res) => {
     You are a Databricks solutions expert creating customer success stories. 
     Analyze the provided customer content and generate three key story elements.
 
-    **Content Requirements:**
-    ${useCaseTypeSpecificInstruction[useCaseCategory.trim()]}
+    Use Case: ${useCaseName.trim()}
+    Category: ${useCaseCategory.trim()}
+    Customer Content: ${filteredContent.trim()}
 
-    **Critical Instructions:**
-    1. Use past tense (the customer "faced", "implemented", "achieved").
-    2. Confidence scores (0.0-1.0) reflect how well the provided content supports each section.
-    3. In suggestions, provide specific suggestions for missing information in context of Databricks and the customer.
-    4. **For the Impact section:**
-      - If the content lacks numeric values, set "impactConfidence" to 0.3
-      - Only include impact statements that directly come from customer content
-    5. Only provide information present in the Customer Content Section.
-    6. If any field cannot be meaningfully generated from the provided 'Customer Content', return an empty string "" for that field and set its corresponding confidence score to 0.0.
+    INSTRUCTIONS:
+    1. Generate content in past tense (customer "faced", "implemented", "achieved")
+    2. If you cannot generate meaningful content for any field, use empty string ""
+    3. Set confidence scores 0.0-1.0 based on how well the content supports each section
+    4. For impact: if no numeric values in content, set impactConfidence to 0.3 maximum
+    5. Provide specific suggestions for missing information
+    6. Use only information from the provided customer content
 
-    **Required JSON Response:**
+    REQUIRED OUTPUT - Return ONLY this JSON structure:
 
     {
-      "problemStatement": "Past tense description of the specific challenge the customer faced in a concise statement (approx. 30-35 words)",
-      "databricksSolution": "Past tense description of how customer solved the problem with Databricks capabilities, specifically addressing the pain points, in a concise statement (approx. 30-35 words)", 
-      "impact": "2 separate impact statements, each concise (up to 10 words), separated by || (double pipe). First impact statement || Second impact statement",
+      "problemStatement": "Concise past-tense problem description (30-35 words)",
+      "databricksSolution": "Concise past-tense solution description (30-35 words)", 
+      "impact": "Impact statement 1 (up to 10 words) || Impact statement 2 (up to 10 words)",
       "problemConfidence": 0.0-1.0,
       "solutionConfidence": 0.0-1.0,
       "impactConfidence": 0.0-1.0,
-      "problemSuggestions": ["specific data needed"],
-      "solutionSuggestions": ["specific data needed"],
-      "impactSuggestions": ["specific data needed"]
+      "problemSuggestions": ["suggestion 1", "suggestion 2"],
+      "solutionSuggestions": ["suggestion 1", "suggestion 2"],
+      "impactSuggestions": ["suggestion 1", "suggestion 2"]
     }
 
-    **Analysis Context:**
-    - Use Case: ${useCaseName.trim()}
-    - Category: ${useCaseCategory.trim()}
-    - Customer Content (Shared by me, the account executive): ${filteredContent.trim()}
-
-    Return ONLY the JSON object. No extra text.
+    Return ONLY the JSON object with no additional text or formatting.
     `;
 
     const response = await callPerplexityAPI(prompt, {
