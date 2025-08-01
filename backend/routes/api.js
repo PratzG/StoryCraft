@@ -40,12 +40,12 @@ Please search for the company and provide the following information in a structu
 Customer details provided: ${customerDetails.trim()}
 `;
 
-    const data = await callPerplexityAPI(prompt, {
+    const response = await callPerplexityAPI(prompt, {
       temperature: 0.1,
       max_tokens: 800
     });
 
-    res.json({data});
+    res.json({response});
   } catch (error) {
     console.error('Customer validation error:', error);
     res.status(500).json({ error: error.message });
