@@ -166,7 +166,6 @@ router.post('/generate-content', async (req, res) => {
     6. Use only information from the provided customer content. If no information is shared in customer content, respond by telling user no relevant information was shared in notes.
 
     REQUIRED OUTPUT - Return ONLY this JSON structure:
-
     {
       "problemStatement": "Concise past-tense problem description (30-35 words)",
       "databricksSolution": "Concise past-tense solution description (30-35 words)", 
