@@ -346,7 +346,7 @@ router.post('/generate-story', async (req, res) => {
     Make the story compelling, professional, and focused on the customer's journey and achievements with Databricks.
     Return ONLY the JSON object. No extra text`;
 
-    const response = await callDatabricksLLM(prompt, {
+    const response = await callPerplexityAPI(prompt, {
       temperature: 0.4,
       max_tokens: 600
     });
