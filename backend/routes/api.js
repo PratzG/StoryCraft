@@ -163,7 +163,7 @@ router.post('/generate-content', async (req, res) => {
     3. Set confidence scores 0.0-1.0 based on how well does content support all elements needed to build each section
     4. For impact: if no numeric values in content, set impactConfidence to 0.3 maximum
     5. Provide specific suggestions for missing information
-    6. Use only information from the provided customer content. If no information is shared in customer content, respond by telling user no relevant information was shared in notes.
+    6. Use only information from the provided customer content. If no information is shared in customer content, respond by telling user no relevant information was shared in notes for each section.
 
     REQUIRED OUTPUT - Return ONLY this JSON structure:
     {
