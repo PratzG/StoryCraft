@@ -148,28 +148,10 @@ router.post('/generate-content', async (req, res) => {
       return res.status(400).json({ error: 'Use case name, category, and filtered content are required' });
     }
 
-    const useCaseTypeSpecificInstruction = {
-      "Business Use Case": `
-      - Problem: Business challenges, operational inefficiencies, market pressures
-      - Solution: Data-driven business capabilities, AI/ML applications, decision-making improvements in context of problem and problem suggestions
-      - Impact: 
-        Business metrics - revenue growth, cost savings, operational efficiency, competitive advantage.
-        Impact statements must include actual measurable values (percentages, savings, speed, performance metrics)
-        If NO numeric values are present in customer content, impactConfidence MUST be 0.3 (do not exceed 0.3)
-      `,
-      "Platform Use Case": `
-      - Problem: Technical challenges, infrastructure limitations, scalability issues
-      - Solution: Databricks platform capabilities, technical architecture, modernization approach in context of problem and problem suggestions`,
-      "Impact": `
-        Technical metrics - performance gains, cost reduction, team productivity improvements. 
-        Impact statements must include actual numeric metrics (e.g., 25% faster queries, $1M savings)
-        If NO numeric values are found in customer content, impactConfidence MUST be 0.3 (do not exceed 0.3).
-        `
-    }
 
     const prompt = `
     You are a Databricks solutions expert creating customer success stories. 
-    Analyze the provided customer content and generate three key story elements.
+    Analyze the provided customer content and generate three key story elements. Problem, solution and impact with the right details necessary to make the story compelling
 
     Use Case: ${useCaseName.trim()}
     Category: ${useCaseCategory.trim()}
