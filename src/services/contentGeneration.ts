@@ -1,3 +1,4 @@
+import { extractJsonFromResponse } from '../utils/repairJSON';
 
 export interface AIEditResult {
   improvedContent: string;
@@ -99,10 +100,7 @@ export async function generateUseCaseContent(
     let generatedContent: GeneratedContent;
     
     try {
-      // Extract JSON from response if it's wrapped in text
-      const jsonMatch = apiResponse.match(/\{[\s\S]*\}/);
-      const jsonString = jsonMatch ? jsonMatch[0] : apiResponse;
-      generatedContent = JSON.parse(jsonString);
+      generatedContent = extractJsonFromResponse(apiResponse);
     } catch (parseError) {
       const isPlatformUseCase = useCaseCategory.toLowerCase().includes('platform');
       
@@ -226,10 +224,7 @@ export async function aiEditContent(
     let editResult: AIEditResult;
     
     try {
-      // Extract JSON from response if it's wrapped in text
-      const jsonMatch = apiResponse.match(/\{[\s\S]*\}/);
-      const jsonString = jsonMatch ? jsonMatch[0] : apiResponse;
-      editResult = JSON.parse(jsonString);
+      editResult = extractJsonFromResponse(apiResponse);
     } catch (parseError) {
       // If JSON parsing fails, create a fallback response
       editResult = {
