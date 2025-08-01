@@ -131,8 +131,8 @@ export async function generateUseCaseContent(
 
     // Validate required fields
     if (!generatedContent.problemStatement || !generatedContent.databricksSolution || !generatedContent.impact) {
-      throw new Error('Incomplete content generation response received');
       console.log(JSON.stringify(generatedContent));
+      throw new Error('Incomplete content generation response received');
     }
 
     // Ensure confidence scores are within valid range
