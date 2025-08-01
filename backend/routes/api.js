@@ -165,7 +165,7 @@ router.post('/generate-content', async (req, res) => {
     4. For impact: if no numeric values in content, set impactConfidence to 0.3 maximum
     5. Provide specific suggestions for missing information
     6. Use only information from the provided customer content. 
-    7. If no relevant information is shared in customer content, respond by telling user no relevant information was shared in notes for each section. No section should ever be empty.
+    7. If no relevant information is shared in customer content, respond by telling the user that further discovery would be needed to generate the story. No section should ever be empty.
 
     REQUIRED OUTPUT - Return ONLY this JSON structure:
     {
