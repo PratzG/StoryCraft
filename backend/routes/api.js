@@ -315,7 +315,7 @@ router.post('/ai-edit-content', async (req, res) => {
     Make sure that there is clear and logical reference to current content in the improved content.
     Return ONLY the JSON object. No extra text.`;
 
-    const {data, citations} = await callPerplexityAPI(prompt, {
+    const data = await callPerplexityAPI(prompt, {
       temperature: 0.4,
       max_tokens: 1000
     });
