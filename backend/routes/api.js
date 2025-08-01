@@ -45,7 +45,7 @@ Customer details provided: ${customerDetails.trim()}
       max_tokens: 800
     });
 
-    res.json({response: data});
+    res.json({data});
   } catch (error) {
     console.error('Customer validation error:', error);
     res.status(500).json({ error: error.message });
