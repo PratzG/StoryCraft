@@ -186,13 +186,14 @@ router.post('/generate-content', async (req, res) => {
       - If the content lacks numeric values, set "impactConfidence" to 0.3
       - Only include impact statements that directly come from customer content
     5. Only provide information present in the Customer Content Section.
+    6. If any field cannot be meaningfully generated from the provided 'Customer Content', return an empty string "" for that field and set its corresponding confidence score to 0.0.
 
     **Required JSON Response:**
 
     {
-      "problemStatement": "Past tense description of the specific challenge the customer faced in a 30-35 word statement",
-      "databricksSolution": "Past tense description of how customer solved the problem with Databricks capabilities, specifically addressing the pain points, in a 30-35 word statement", 
-      "impact": "2 separate impact statements, each 10 words maximum, separated by || (double pipe). First impact statement || Second impact statement",
+      "problemStatement": "Past tense description of the specific challenge the customer faced in a concise statement (approx. 30-35 words)",
+      "databricksSolution": "Past tense description of how customer solved the problem with Databricks capabilities, specifically addressing the pain points, in a concise statement (approx. 30-35 words)", 
+      "impact": "2 separate impact statements, each concise (up to 10 words), separated by || (double pipe). First impact statement || Second impact statement",
       "problemConfidence": 0.0-1.0,
       "solutionConfidence": 0.0-1.0,
       "impactConfidence": 0.0-1.0,

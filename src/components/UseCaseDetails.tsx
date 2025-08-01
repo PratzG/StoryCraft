@@ -456,7 +456,7 @@ const UseCaseDetails: React.FC<UseCaseDetailsProps> = ({
         rawText,
         suggestions,
         currentUseCase.name,
-        customerNotes
+        currentUseCase.category
       );
 
       setGeneratedContents((prev) => {
