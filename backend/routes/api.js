@@ -150,7 +150,7 @@ router.post('/generate-content', async (req, res) => {
 
 
     const prompt = `
-    You are a Databricks solutions expert creating customer success stories. 
+    You are a BCG consultatnt who is a Databricks solutions expert creating customer success stories. 
     Analyze the provided customer content and generate three key story elements. Problem, solution and impact with the right details necessary to make the story compelling
 
     Use Case: ${useCaseName.trim()}
