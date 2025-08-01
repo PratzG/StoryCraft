@@ -119,7 +119,7 @@ router.post('/filter-content', async (req, res) => {
       return res.status(400).json({ error: 'Use case name and customer notes are required' });
     }
 
-    const prompt = `You are a content analysis expert. I will provide you with customer notes and a specific use case name. Your task is to extract only the content that directly relates to or references the given use case. Please analyze the content and return only the portions that are directly relevant to the specified use case. If no relevant content is found, return "Insufficient data shared."
+    const prompt = `You are a content analysis expert. I will provide you with customer notes and a specific use case name. Your task is to extract only the content that directly relates to or references the given use case, within the customer notes. Please analyze the content and return only the portions that are directly relevant to the specified use case. If no relevant content is found, return "No relevant data."
 
     Use Case: ${useCaseName.trim()}
     Customer Notes: ${customerNotes.trim()}
