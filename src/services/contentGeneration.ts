@@ -132,6 +132,7 @@ export async function generateUseCaseContent(
     // Validate required fields
     if (!generatedContent.problemStatement || !generatedContent.databricksSolution || !generatedContent.impact) {
       throw new Error('Incomplete content generation response received');
+      console.log(JSON.stringify(generatedContent));
     }
 
     // Ensure confidence scores are within valid range
@@ -178,6 +179,7 @@ export async function processUseCaseContent(
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Use case content processing failed: ${error.message}`);
+      console.log()
     }
     throw new Error('Use case content processing failed: Unknown error occurred');
   }
