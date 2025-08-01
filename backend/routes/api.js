@@ -119,16 +119,12 @@ router.post('/filter-content', async (req, res) => {
       return res.status(400).json({ error: 'Use case name and customer notes are required' });
     }
 
-    const prompt = `You are a content analysis expert. I will provide you with customer notes and a specific use case name. 
-    Your task is to extract only the content that directly relates to or references the given use case.
-
-    Please analyze the content and return only the portions that are directly relevant to the specified use case. 
-    If no relevant content is found, return "Insufficient data shared."
+    const prompt = `You are a content analysis expert. I will provide you with customer notes and a specific use case name. Your task is to extract only the content that directly relates to or references the given use case. Please analyze the content and return only the portions that are directly relevant to the specified use case. If no relevant content is found, return "Insufficient data shared."
 
     Use Case: ${useCaseName.trim()}
     Customer Notes: ${customerNotes.trim()}
 
-    Return only the filtered content that directly speaks about this use case, maintaining the original context and meaning.`;
+Return only the filtered content that directly speaks about this use case, maintaining the original context and meaning.`;
 
     const response = await callPerplexityAPI(prompt, {
       temperature: 0.1,
@@ -182,7 +178,7 @@ router.post('/generate-content', async (req, res) => {
     INSTRUCTIONS:
     1. Generate content in past tense (customer "faced", "implemented", "achieved")
     2. If you cannot generate meaningful content for any field, use empty string ""
-    3. Set confidence scores 0.0-1.0 based on how well the content supports each section
+    3. Set confidence scores 0.0-1.0 based on how well does content support all elements needed to build each section
     4. For impact: if no numeric values in content, set impactConfidence to 0.3 maximum
     5. Provide specific suggestions for missing information
     6. Use only information from the provided customer content
